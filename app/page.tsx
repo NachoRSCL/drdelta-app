@@ -22,9 +22,8 @@ export default async function HomePage() {
     <main className="min-h-screen flex items-center justify-center px-4 py-10">
       <div className="w-full max-w-md">
         <div className="flex flex-col items-center text-center">
-          <Logo size={44} />
-          <h1 className="mt-8 text-4xl font-extrabold tracking-tight">DR Delta</h1>
-          <p className="mt-2 text-sm text-slate-500">
+          <Logo size={80} />
+          <p className="mt-6 text-sm text-slate-500">
             Mediciones <span className="mx-1">→</span> Decisiones <span className="mx-1">→</span> Litros
           </p>
         </div>

@@ -21,9 +21,10 @@ export default async function AdminLayout({ children }: { children: React.ReactN
       <header className="bg-white border-b">
         <div className="max-w-6xl mx-auto px-4 py-3 flex items-center justify-between">
           <Link href="/admin" className="flex items-center gap-2">
-            <Logo size={26} withWord />
-            <span className="text-slate-300">|</span>
-            <span className="font-semibold">DR Delta · Admin</span>
+            <Logo size={36} />
+            <span className="ml-1 text-[10px] font-semibold uppercase tracking-widest text-slate-500 bg-slate-100 rounded px-2 py-0.5">
+              Admin
+            </span>
           </Link>
           <div className="flex items-center gap-4 text-sm">
             <Link href="/ejecutivo" className="text-slate-600 hover:underline">Ir a ejecutivo</Link>

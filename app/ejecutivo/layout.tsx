@@ -21,9 +21,7 @@ export default async function EjecutivoLayout({ children }: { children: React.Re
       <header className="bg-white border-b">
         <div className="max-w-5xl mx-auto px-4 py-3 flex items-center justify-between">
           <Link href="/ejecutivo" className="flex items-center gap-2">
-            <Logo size={26} withWord />
-            <span className="text-slate-300">|</span>
-            <span className="font-semibold">DR Delta</span>
+            <Logo size={36} />
           </Link>
           <div className="flex items-center gap-4 text-sm">
             <Link href="/ejecutivo/mis-registros" className="text-slate-600 hover:underline">

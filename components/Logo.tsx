@@ -1,50 +1,41 @@
 import Image from "next/image";
 
 /**
- * Logo de Addvise.
- * Usa por defecto /public/addvise-logo.svg (un SVG que aproxima la identidad).
- * Cuando tengamos el PNG/SVG oficial, lo dejas en /public/addvise-logo.png o .svg
- * con el mismo nombre y se reemplaza automáticamente.
+ * Logo de DR Delta.
+ * Renderiza /public/drdelta-logo.svg a una altura fija, el ancho se ajusta
+ * por aspect ratio (3:2).
+ *
+ * Props:
+ *  - size: altura en px (default 32)
+ *  - withWord: se mantiene para compatibilidad; el SVG oficial ya incluye el wordmark.
  */
 export default function Logo({ size = 32, withWord = true }: { size?: number; withWord?: boolean }) {
-  // mantenemos la firma `size` y `withWord` por compatibilidad con lo que ya está montado.
-  // el SVG incluye el wordmark; `withWord=false` muestra sólo el mark recortando el viewBox con CSS.
-  const height = size;
-  const width = withWord ? size * 3.25 : size * 0.95;
+  const intrinsicW = 960;
+  const intrinsicH = 640;
+  const width = Math.round((intrinsicW / intrinsicH) * size);
+  void withWord;
+
   return (
-    <span
-      className="inline-flex items-center"
-      style={{
-        height,
-        width,
-        overflow: "hidden",
-      }}
-    >
-      <Image
-        src="/addvise-logo.svg"
-        alt="AddVise"
-        width={520}
-        height={160}
-        style={{
-          height,
-          width: withWord ? "auto" : size * 3.25,
-          objectFit: "contain",
-          objectPosition: "left center",
-        }}
-        priority
-      />
-    </span>
+    <Image
+      src="/drdelta-logo.svg"
+      alt="DR Delta"
+      width={width}
+      height={size}
+      style={{ height: size, width: "auto" }}
+      priority
+      unoptimized
+    />
   );
 }
 
-/** Variante que usa un PNG oficial si lo dejas en /public/addvise-logo.png */
+/** Variante para usar un PNG si lo subes a /public/drdelta-logo.png */
 export function LogoPng({ height = 36 }: { height?: number }) {
   return (
     <Image
-      src="/addvise-logo.png"
-      alt="AddVise"
+      src="/drdelta-logo.png"
+      alt="DR Delta"
       height={height}
-      width={height * 3}
+      width={Math.round(height * 1.5)}
       style={{ height, width: "auto" }}
       priority
     />
