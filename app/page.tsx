@@ -3,7 +3,20 @@ import { redirect } from "next/navigation";
 import Logo from "@/components/Logo";
 import LoginForm from "./login-form";
 
-export default async function HomePage() {
+export default async function HomePage({
+  searchParams,
+}: {
+  searchParams: Promise<{ code?: string; next?: string }>;
+}) {
+  // Si Supabase nos mandó el ?code=... a la raíz por una mala config de Site URL,
+  // lo reenviamos al handler correcto para no romper el magic link.
+  const sp = await searchParams;
+  if (sp.code) {
+    const params = new URLSearchParams({ code: sp.code });
+    if (sp.next) params.set("next", sp.next);
+    redirect(`/auth/callback?${params.toString()}`);
+  }
+
   const supabase = await createClient();
   const { data: { user } } = await supabase.auth.getUser();
 
