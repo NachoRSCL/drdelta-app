@@ -1,0 +1,27 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 520 160" role="img" aria-label="AddVise">
+  <!-- Mark: grunge check / swoosh rojo -->
+  <g transform="translate(10,18)">
+    <path fill="#DC2626" d="M20 62 C 18 66, 14 70, 16 76 C 22 90, 38 100, 54 104 L 56 96 C 42 92, 30 82, 26 72 Z"/>
+    <path fill="#DC2626" d="M18 58 C 28 36, 46 18, 70 10 L 78 24 C 58 30, 42 44, 34 60 Z"/>
+    <path fill="#DC2626" d="M58 102 L 112 66 C 118 62, 124 58, 128 52 L 120 38 L 72 72 C 68 74, 64 78, 58 80 Z"/>
+    <!-- salpicaduras / textura grunge -->
+    <circle fill="#DC2626" cx="8" cy="52" r="3"/>
+    <circle fill="#DC2626" cx="6" cy="40" r="2"/>
+    <circle fill="#DC2626" cx="14" cy="84" r="2.2"/>
+    <circle fill="#DC2626" cx="48" cy="114" r="2.4"/>
+    <circle fill="#DC2626" cx="64" cy="118" r="1.8"/>
+    <circle fill="#DC2626" cx="98" cy="28" r="2"/>
+    <circle fill="#DC2626" cx="122" cy="30" r="2.4"/>
+    <circle fill="#DC2626" cx="136" cy="46" r="1.8"/>
+    <rect fill="#DC2626" x="80" y="0" width="4" height="10"/>
+    <rect fill="#DC2626" x="0" y="66" width="6" height="4"/>
+    <rect fill="#DC2626" x="126" y="60" width="4" height="8"/>
+  </g>
+
+  <!-- Wordmark: Add (rojo) + Vise (gris) -->
+  <g font-family="'Inter','Helvetica Neue',Arial,sans-serif" font-weight="900" font-size="108">
+    <text x="170" y="112" fill="#DC2626" letter-spacing="-2">Add</text>
+    <text x="340" y="112" fill="#1F2937" letter-spacing="-2">Vise</text>
+  </g>
+</svg>
