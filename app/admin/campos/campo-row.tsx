@@ -69,8 +69,11 @@ export default function CampoRow({ id, nombre, comuna, activo }: Props) {
         </button>
         <button
           disabled={pending}
-          onClick={() => start(() => toggleCampoActivo(id, !activo))}
-          className="text-xs underline text-slate-700 disabled:opacity-50"
+onClick={() =>
+  start(async () => {
+    await toggleCampoActivo(id, !activo)
+  })
+}          className="text-xs underline text-slate-700 disabled:opacity-50"
         >
           {pending ? "…" : activo ? "Desactivar" : "Activar"}
         </button>
