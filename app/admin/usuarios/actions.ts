@@ -1,82 +1,119 @@
 "use server";
+
 import { createClient } from "@/lib/supabase/server";
 import { revalidatePath } from "next/cache";
 
 async function requireAdmin() {
   const supabase = await createClient();
-  const { data: { user } } = await supabase.auth.getUser();
-  if (!user) return { error: "No autenticado", supabase: null as any };
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+
+  if (!user) {
+    throw new Error("No autenticado");
+  }
+
   const { data: me } = await supabase
     .from("profiles")
     .select("rol, activo")
     .eq("id", user.id)
     .maybeSingle();
+
   if (!me || !me.activo || me.rol !== "admin") {
-    return { error: "No autorizado", supabase: null as any };
+    throw new Error("No autorizado");
   }
-  return { error: null, supabase };
+
+  return supabase;
 }
 
-export async function invitarUsuario(formData: FormData) {
-  const { supabase, error } = await requireAdmin();
-  if (error) return { error };
+export async function invitarUsuario(formData: FormData): Promise<void> {
+  const supabase = await requireAdmin();
 
   const email = String(formData.get("email") ?? "").trim().toLowerCase();
   const rol = String(formData.get("rol") ?? "ejecutivo");
-  if (!email) return { error: "Email vacío" };
-  if (rol !== "admin" && rol !== "ejecutivo") return { error: "Rol inválido" };
+
+  if (!email) {
+    throw new Error("Email vacío");
+  }
+
+  if (rol !== "admin" && rol !== "ejecutivo") {
+    throw new Error("Rol inválido");
+  }
 
   const { error: insErr } = await supabase
     .from("invitaciones")
     .upsert({ email, rol, activo: true }, { onConflict: "email" });
-  if (insErr) return { error: insErr.message };
 
-  // también sincronizar perfil si ya existe (por si cambiamos rol)
-  await supabase
+  if (insErr) {
+    throw new Error(insErr.message);
+  }
+
+  const { error: syncErr } = await supabase
     .from("profiles")
     .update({ rol, activo: true })
     .eq("email", email);
 
+  if (syncErr) {
+    throw new Error(syncErr.message);
+  }
+
   revalidatePath("/admin/usuarios");
-  return { ok: true };
 }
 
-export async function cambiarEstadoUsuario(email: string, activo: boolean) {
-  const { supabase, error } = await requireAdmin();
-  if (error) return { error };
+export async function cambiarEstadoUsuario(
+  email: string,
+  activo: boolean
+): Promise<void> {
+  const supabase = await requireAdmin();
 
   const { error: e1 } = await supabase
     .from("invitaciones")
     .update({ activo })
     .eq("email", email);
-  if (e1) return { error: e1.message };
+
+  if (e1) {
+    throw new Error(e1.message);
+  }
 
   const { error: e2 } = await supabase
     .from("profiles")
     .update({ activo })
     .eq("email", email);
-  if (e2) return { error: e2.message };
+
+  if (e2) {
+    throw new Error(e2.message);
+  }
 
   revalidatePath("/admin/usuarios");
-  return { ok: true };
 }
 
-export async function cambiarRolUsuario(email: string, rol: "admin" | "ejecutivo") {
-  const { supabase, error } = await requireAdmin();
-  if (error) return { error };
+export async function cambiarRolUsuario(
+  email: string,
+  rol: "admin" | "ejecutivo"
+): Promise<void> {
+  const supabase = await requireAdmin();
+
+  if (rol !== "admin" && rol !== "ejecutivo") {
+    throw new Error("Rol inválido");
+  }
 
   const { error: e1 } = await supabase
     .from("invitaciones")
     .update({ rol })
     .eq("email", email);
-  if (e1) return { error: e1.message };
+
+  if (e1) {
+    throw new Error(e1.message);
+  }
 
   const { error: e2 } = await supabase
     .from("profiles")
     .update({ rol })
     .eq("email", email);
-  if (e2) return { error: e2.message };
+
+  if (e2) {
+    throw new Error(e2.message);
+  }
 
   revalidatePath("/admin/usuarios");
-  return { ok: true };
 }
