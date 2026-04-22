@@ -1,0 +1,14 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64" role="img" aria-label="DR Delta">
+  <rect width="64" height="64" rx="14" fill="#DC2626"/>
+  <text
+    x="50%"
+    y="50%"
+    dy=".08em"
+    text-anchor="middle"
+    dominant-baseline="middle"
+    font-family="'Inter','Helvetica Neue',Arial,sans-serif"
+    font-weight="900"
+    font-size="44"
+    fill="#ffffff"
+    letter-spacing="-1">D</text>
+</svg>

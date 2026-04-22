@@ -1,7 +1,7 @@
 import { createClient } from "@/lib/supabase/server";
 import Link from "next/link";
 import { notFound } from "next/navigation";
-import SemaforoDot from "@/components/SemaforoDot";
+import GaugeChart from "@/components/GaugeChart";
 import { COLOR_BG_SOFT, type Color } from "@/lib/semaforo";
 
 export default async function ResultadoRegistroPage({
@@ -20,7 +20,7 @@ export default async function ResultadoRegistroPage({
 
   const { data: valores } = await supabase
     .from("registro_valores")
-    .select("valor, color, variables(id, nombre, unidad)")
+    .select("valor, color, variables(id, nombre, unidad, corte_rojo, corte_verde, direccion)")
     .eq("registro_id", id);
 
   const variableIds = (valores ?? [])
@@ -70,27 +70,46 @@ export default async function ResultadoRegistroPage({
             (x: any) => x.variable_id === v.variables?.id && x.color === color
           );
           const soft = color ? COLOR_BG_SOFT[color] : "";
+          const hasGaugeData =
+            v.variables?.corte_rojo != null &&
+            v.variables?.corte_verde != null &&
+            v.variables?.direccion;
+
           return (
-            <div key={v.variables?.id} className={`frame p-5 border ${soft}`}>
-              <div className="flex items-start justify-between gap-2">
-                <div>
-                  <div className="font-semibold">{v.variables?.nombre}</div>
-                  <div className="text-xs text-slate-500">
-                    Valor ingresado: <b>{v.valor}{v.variables?.unidad ? ` ${v.variables.unidad}` : ""}</b>
-                  </div>
+            <div key={v.variables?.id} className={`frame p-4 border ${soft}`}>
+              <div className="font-semibold text-center mb-1">{v.variables?.nombre}</div>
+
+              {hasGaugeData ? (
+                <div className="flex justify-center">
+                  <GaugeChart
+                    valor={v.valor as number | null}
+                    corteRojo={v.variables.corte_rojo as number}
+                    corteVerde={v.variables.corte_verde as number}
+                    direccion={v.variables.direccion as "normal" | "invertida"}
+                    unidad={v.variables.unidad as string || ""}
+                  />
                 </div>
-                <SemaforoDot color={color} />
-              </div>
+              ) : (
+                <div className="text-xs text-slate-500 text-center py-2">
+                  Valor: <b>{v.valor ?? "—"}{v.variables?.unidad ? ` ${v.variables.unidad}` : ""}</b>
+                </div>
+              )}
 
               {t && (
-                <>
-                  <div className="mt-3 label-up">Interpretación</div>
-                  <div className="text-sm">{t.interpretacion}</div>
-                  <div className="mt-3 label-up">Acción</div>
-                  <div className="text-sm">{t.accion}</div>
-                  <div className="mt-3 label-up">Solución Addvise</div>
-                  <div className="text-sm font-semibold">{t.solucion_addvise || "—"}</div>
-                </>
+                <div className="mt-3 space-y-2">
+                  <div>
+                    <div className="label-up">Interpretación</div>
+                    <div className="text-sm">{t.interpretacion}</div>
+                  </div>
+                  <div>
+                    <div className="label-up">Acción</div>
+                    <div className="text-sm">{t.accion}</div>
+                  </div>
+                  <div>
+                    <div className="label-up">Solución Addvise</div>
+                    <div className="text-sm font-semibold">{t.solucion_addvise || "—"}</div>
+                  </div>
+                </div>
               )}
             </div>
           );

@@ -4,7 +4,6 @@ import "./globals.css";
 export const metadata: Metadata = {
   title: "DR Delta",
   description: "Mediciones → Decisiones → Litros",
-  icons: { icon: "/favicon.ico" }
 };
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {
