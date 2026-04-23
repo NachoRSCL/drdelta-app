@@ -1,8 +1,16 @@
-// Zonas sólidas redondeadas + aguja.
-// Cada zona es un trazo de arco con strokeLinecap="round":
-// los extremos del gauge y las uniones entre zonas quedan redondeados.
+// Gauge circular (270°) cóncavo.
+// El surco exterior (track) tiene extremos redondeados.
+// Las zonas de color quedan incrustadas dentro del surco (efecto cóncavo).
 
 import { calcRange, toRad, ZONE_COLORS } from "@/lib/gauge";
+
+const CX = 100;
+const CY = 100;
+const R = 72;     // radio del surco (centro del trazo)
+const SW_T = 22;  // grosor del surco gris exterior
+const SW_Z = 14;  // grosor de las zonas de color (más angosto → quedan dentro del surco)
+const START = 225; // ángulo del valor mínimo (grados matemáticos, CCW desde derecha)
+const SWEEP = 270; // barrido total del gauge (en sentido horario)
 
 export default function GaugeChart({
   valor,
@@ -17,82 +25,79 @@ export default function GaugeChart({
   direccion: "normal" | "invertida";
   unidad?: string;
 }) {
-  const CX = 100;
-  const CY = 103; // ligeramente abajo para que las etiquetas superiores tengan espacio
-  const R = 68;   // radio del trazo (centro del arco)
-  const SW = 28;  // grosor del trazo
-
   const { gMin, gMax } = calcRange(corteRojo, corteVerde, direccion, unidad);
   const span = gMax - gMin || 1;
 
-  // Punto en el arco de trazo a ángulo 'a' y radio 'r'
+  // Punto en un círculo a ángulo 'a' (grados matemáticos) y radio 'r'
   const ptAt = (a: number, r: number) => ({
     x: CX + r * Math.cos(toRad(a)),
     y: CY - r * Math.sin(toRad(a)),
   });
 
-  // Valor → ángulo: 180° = izquierda (gMin), 0° = derecha (gMax)
+  // Valor → ángulo en grados matemáticos (decrece en sentido horario desde START)
   const v2a = (v: number) =>
-    180 - Math.max(0, Math.min(1, (v - gMin) / span)) * 180;
+    START - Math.max(0, Math.min(1, (v - gMin) / span)) * SWEEP;
 
-  // Trazo de arco entre dos ángulos (siempre a1 > a2)
-  const arcStroke = (a1: number, a2: number): string => {
-    const p1 = ptAt(a1, R), p2 = ptAt(a2, R);
-    const large = a1 - a2 > 180 ? 1 : 0;
+  // Trazo de arco de a1 a a2 en sentido horario (sweep=1 en SVG)
+  const arc = (a1: number, a2: number, r: number): string => {
+    const cwSpan = ((a1 - a2) % 360 + 360) % 360;
+    const large = cwSpan > 180 ? 1 : 0;
+    const p1 = ptAt(a1, r), p2 = ptAt(a2, r);
     const f = (n: number) => n.toFixed(2);
-    return `M${f(p1.x)},${f(p1.y)} A${R},${R} 0 ${large},0 ${f(p2.x)},${f(p2.y)}`;
+    return `M${f(p1.x)},${f(p1.y)} A${r},${r} 0 ${large},1 ${f(p2.x)},${f(p2.y)}`;
   };
 
-  // Con calcRange las zonas siempre son iguales en ancho (1/3 cada una)
-  const cutA1 = v2a(direccion === "normal" ? corteRojo : corteVerde); // ~120°
-  const cutA2 = v2a(direccion === "normal" ? corteVerde : corteRojo); // ~60°
+  const endAngle = START - SWEEP; // = -45° ≡ 315° (posición del valor máximo)
 
-  // Orden de dibujo: zona1 → zona2 → zona3
-  // Cada zona tapa el extremo redondeado derecho de la anterior → unión limpia
+  // Con calcRange las zonas siempre tienen igual ancho (90° c/u)
+  const cutA1 = v2a(direccion === "normal" ? corteRojo : corteVerde);
+  const cutA2 = v2a(direccion === "normal" ? corteVerde : corteRojo);
+
   const zones =
     direccion === "normal"
       ? [
-          { d: arcStroke(180, cutA1), color: ZONE_COLORS.rojo },
-          { d: arcStroke(cutA1, cutA2), color: ZONE_COLORS.amarillo },
-          { d: arcStroke(cutA2, 0), color: ZONE_COLORS.verde },
+          [arc(START, cutA1, R), ZONE_COLORS.rojo],
+          [arc(cutA1, cutA2, R), ZONE_COLORS.amarillo],
+          [arc(cutA2, endAngle, R), ZONE_COLORS.verde],
         ]
       : [
-          { d: arcStroke(180, cutA1), color: ZONE_COLORS.verde },
-          { d: arcStroke(cutA1, cutA2), color: ZONE_COLORS.amarillo },
-          { d: arcStroke(cutA2, 0), color: ZONE_COLORS.rojo },
+          [arc(START, cutA1, R), ZONE_COLORS.verde],
+          [arc(cutA1, cutA2, R), ZONE_COLORS.amarillo],
+          [arc(cutA2, endAngle, R), ZONE_COLORS.rojo],
         ];
 
-  const needleAngle = valor !== null ? v2a(valor) : 90;
-  const tip = ptAt(needleAngle, R + SW / 2 - 5); // punta cerca del borde exterior
-  const f = (n: number) => n.toFixed(2);
-  const fmt = (v: number) => (Number.isInteger(v) ? String(v) : v.toFixed(1));
+  const needleA = valor !== null ? v2a(valor) : START - SWEEP / 2;
+  const tip = ptAt(needleA, R + SW_Z / 2 - 1); // punta cerca del borde exterior de la zona
 
-  // Etiquetas de los cortes, afuera del arco
+  const fmt = (v: number) => (Number.isInteger(v) ? String(v) : v.toFixed(1));
+  const f = (n: number) => n.toFixed(2);
+
+  // Etiquetas de los cortes, afuera del surco
   const cutLabels = [corteRojo, corteVerde].map((v) => {
-    const lbl = ptAt(v2a(v), R + SW / 2 + 12);
+    const lbl = ptAt(v2a(v), R + SW_T / 2 + 12);
     return { v, x: lbl.x, y: lbl.y };
   });
 
   return (
-    <svg viewBox="0 0 200 120" width="100%" style={{ maxWidth: 200 }}>
-      {/* Fondo gris: arco completo con extremos redondeados */}
+    <svg viewBox="0 0 200 170" width="100%" style={{ maxWidth: 200 }}>
+      {/* Surco gris exterior — extremos redondeados, 270° */}
       <path
-        d={arcStroke(180, 0)}
+        d={arc(START, endAngle, R)}
         fill="none"
         stroke="#e2e8f0"
-        strokeWidth={SW}
+        strokeWidth={SW_T}
         strokeLinecap="round"
       />
 
-      {/* Zonas de color (trazo con extremos redondeados) */}
-      {zones.map(({ d, color }, i) => (
+      {/* Zonas de color incrustadas en el surco — extremos planos (butt) */}
+      {zones.map(([d, color], i) => (
         <path
           key={i}
-          d={d}
+          d={d as string}
           fill="none"
-          stroke={color}
-          strokeWidth={SW}
-          strokeLinecap="round"
+          stroke={color as string}
+          strokeWidth={SW_Z}
+          strokeLinecap="butt"
         />
       ))}
 
@@ -101,25 +106,23 @@ export default function GaugeChart({
         <text
           key={v}
           x={f(x)} y={f(y)}
-          textAnchor="middle"
-          dominantBaseline="middle"
-          fontSize="7.5"
-          fill="#475569"
+          textAnchor="middle" dominantBaseline="middle"
+          fontSize="7.5" fill="#64748b"
         >
           {fmt(v)}{unidad}
         </text>
       ))}
 
-      {/* Aguja: trazo blanco grueso + trazo oscuro encima */}
+      {/* Aguja */}
       {valor !== null && (
         <>
           <line
             x1={CX} y1={CY} x2={f(tip.x)} y2={f(tip.y)}
-            stroke="white" strokeWidth="5" strokeLinecap="round"
+            stroke="white" strokeWidth="4" strokeLinecap="round"
           />
           <line
             x1={CX} y1={CY} x2={f(tip.x)} y2={f(tip.y)}
-            stroke="#1e293b" strokeWidth="2.5" strokeLinecap="round"
+            stroke="#0f172a" strokeWidth="2.5" strokeLinecap="round"
           />
         </>
       )}
@@ -128,16 +131,18 @@ export default function GaugeChart({
       <circle cx={CX} cy={CY} r={8} fill="#1e293b" />
       <circle cx={CX} cy={CY} r={3.5} fill="#f1f5f9" />
 
-      {/* Valor numérico debajo del pivote */}
+      {/* Valor numérico en el centro del círculo */}
       <text
-        x={CX} y={CY + 15}
-        textAnchor="middle"
-        fontSize="12"
-        fontWeight="700"
-        fill="#0f172a"
+        x={CX} y={CY + 2}
+        textAnchor="middle" fontSize="18" fontWeight="800" fill="#0f172a"
       >
-        {valor !== null ? `${fmt(valor)}${unidad ? ` ${unidad}` : ""}` : "—"}
+        {valor !== null ? fmt(valor) : "—"}
       </text>
+      {unidad && (
+        <text x={CX} y={CY + 18} textAnchor="middle" fontSize="9" fill="#64748b">
+          {unidad}
+        </text>
+      )}
     </svg>
   );
 }
