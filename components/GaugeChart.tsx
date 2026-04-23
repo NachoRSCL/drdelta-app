@@ -5,8 +5,8 @@
 import { calcRange, toRad, ZONE_COLORS } from "@/lib/gauge";
 
 const CX = 100;
-const CY = 100;
-const R = 72;     // radio del surco (centro del trazo)
+const CY = 84;    // centro del círculo más arriba → deja hueco abajo para el valor
+const R = 68;     // radio del surco (centro del trazo)
 const SW_T = 22;  // grosor del surco gris exterior
 const SW_Z = 14;  // grosor de las zonas de color (más angosto → quedan dentro del surco)
 const START = 225; // ángulo del valor mínimo (grados matemáticos, CCW desde derecha)
@@ -78,8 +78,12 @@ export default function GaugeChart({
     return { v, x: lbl.x, y: lbl.y };
   });
 
+  // Centro del hueco inferior (apertura de 90° entre los extremos del arco)
+  // ptAt(270°) = punto más bajo del círculo = (CX, CY + R)
+  const gapCenterY = CY + R; // y ≈ 152 — en el hueco, debajo del arco
+
   return (
-    <svg viewBox="0 0 200 170" width="100%" style={{ maxWidth: 200 }}>
+    <svg viewBox="0 0 200 175" width="100%" style={{ maxWidth: 200 }}>
       {/* Surco gris exterior — extremos redondeados, 270° */}
       <path
         d={arc(START, endAngle, R)}
@@ -101,7 +105,7 @@ export default function GaugeChart({
         />
       ))}
 
-      {/* Etiquetas de corte */}
+      {/* Etiquetas de corte fuera del surco */}
       {cutLabels.map(({ v, x, y }) => (
         <text
           key={v}
@@ -131,15 +135,18 @@ export default function GaugeChart({
       <circle cx={CX} cy={CY} r={8} fill="#1e293b" />
       <circle cx={CX} cy={CY} r={3.5} fill="#f1f5f9" />
 
-      {/* Valor numérico en el centro del círculo */}
+      {/* Valor y unidad en el hueco inferior — fuera del círculo */}
       <text
-        x={CX} y={CY + 2}
-        textAnchor="middle" fontSize="18" fontWeight="800" fill="#0f172a"
+        x={CX} y={gapCenterY + 8}
+        textAnchor="middle" fontSize="20" fontWeight="800" fill="#0f172a"
       >
         {valor !== null ? fmt(valor) : "—"}
       </text>
       {unidad && (
-        <text x={CX} y={CY + 18} textAnchor="middle" fontSize="9" fill="#64748b">
+        <text
+          x={CX} y={gapCenterY + 24}
+          textAnchor="middle" fontSize="10" fill="#64748b"
+        >
           {unidad}
         </text>
       )}
